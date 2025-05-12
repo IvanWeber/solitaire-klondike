@@ -48,7 +48,7 @@
       color: black;
       cursor: grab;
       padding: 5px;
-      transition: transform 0.5s ease-in-out;
+      transition: transform 0.8s ease;
     }
     .card .value {
       position: absolute;
@@ -211,16 +211,8 @@
             if (targetPile) {
               const first = movingStack[0];
               const top = targetPile.lastElementChild;
-              if (targetPile === foundation) {
-                if (movingStack.length === 1 &&
-                  ((!top && first.dataset.index === '0') ||
-                  (top && parseInt(first.dataset.index) === parseInt(top.dataset.index) + 1))) {
-                  valid = true;
-                }
-              } else {
-                if (!top || parseInt(first.dataset.index) === parseInt(top.dataset.index) - 1) {
-                  valid = true;
-                }
+              if (!top || parseInt(first.dataset.index) === parseInt(top.dataset.index) - 1) {
+                valid = true;
               }
             }
   
@@ -233,43 +225,48 @@
             layoutAllPiles();
             enableDraggableOnTopCards();
             movingStack.forEach(c => c.classList.remove('dragging'));
-            checkWin();
+            setTimeout(checkWin, 100);
           }
   
           document.addEventListener('mousemove', onMouseMove);
           document.addEventListener('mouseup', onMouseUp);
         };
       }
-  
+
+
+
       function getDropPile(x, y) {
         const all = document.querySelectorAll('.pile');
         for (let p of all) {
-          const r = p.getBoundingClientRect();
-          if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return p;
+            const r = p.getBoundingClientRect();
+            if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return p;
         }
         return null;
-      }
+        }
+
   
       function checkWin() {
-        if (foundation.children.length === 13) {
-          win.style.display = 'block';
-          const center = foundation.getBoundingClientRect();
-          const cx = center.left + 40;
-          const cy = center.top + 60;
-          const allCards = document.querySelectorAll('.card');
-          allCards.forEach((card, i) => {
-            const rect = card.getBoundingClientRect();
-            const dx = cx - rect.left;
-            const dy = cy - rect.top;
-            setTimeout(() => {
-              card.style.transform = `translate(${dx}px, ${dy}px) scale(0.5) rotate(${720 + i * 10}deg)`;
-            }, i * 40);
-          });
-          setTimeout(launchConfetti, 100);
+        for (let pile of piles) {
+          const cards = Array.from(pile.children);
+          if (cards.length === 13 && isOrderedStack(cards)) {
+            win.style.display = 'block';
+            const center = pile.getBoundingClientRect();
+            const cx = center.left + pile.offsetWidth / 2;
+            const cy = center.top + pile.offsetHeight / 2;
+            cards.forEach((card, i) => {
+              const rect = card.getBoundingClientRect();
+              const dx = cx - rect.left;
+              const dy = cy - rect.top;
+              setTimeout(() => {
+                card.style.transform = `translate(${dx}px, ${dy}px) scale(0.4) rotate(${720 + i * 5}deg)`;
+              }, i * 40);
+            });
+            setTimeout(() => launchConfetti(), cards.length * 40 + 300);
+            break;
+          }
         }
       }
   
-      // Конфетти 🎉
       let confetti = [];
       function launchConfetti() {
         canvas.width = window.innerWidth;
