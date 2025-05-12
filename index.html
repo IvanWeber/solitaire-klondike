@@ -90,6 +90,7 @@
     let deck = [];
 
     function createDeck() {
+      deck = [];
       for (let i = values.length - 1; i >= 0; i--) {
         deck.push({ value: values[i], index: i });
       }
@@ -121,17 +122,28 @@
           const cardData = deck.pop();
           const card = createCard(cardData);
           if (card) {
-            card.style.top = (j * 30) + 'px';
             pile.appendChild(card);
           }
         }
       }
+      layoutAllPiles();
       enableDraggableOnTopCards();
+    }
+
+    function layoutAllPiles() {
+      piles.forEach(pile => {
+        const cards = Array.from(pile.children);
+        cards.forEach((card, i) => {
+          card.style.top = (i * 30) + 'px';
+          card.style.left = '';
+        });
+      });
     }
 
     function enableDraggableOnTopCards() {
       piles.forEach(pile => {
         const cards = Array.from(pile.children);
+        cards.forEach(c => c.onmousedown = null); // снять старые
         for (let i = 0; i < cards.length; i++) {
           if (isOrderedStack(cards.slice(i))) {
             makeStackDraggable(cards[i]);
@@ -203,23 +215,19 @@
           }
 
           if (valid && targetPile) {
-            movingStack.forEach((c, i) => {
+            movingStack.forEach(c => {
               targetPile.appendChild(c);
-              c.style.left = '';
-              c.style.top = (targetPile.children.length - movingStack.length + i) * 30 + 'px';
             });
-            enableDraggableOnTopCards();
-            checkWin();
           } else {
             movingStack.forEach((c, i) => {
               pile.appendChild(c);
-              c.style.left = '';
-              c.style.top = (cardIndex + i) * 30 + 'px';
             });
-            enableDraggableOnTopCards();
           }
 
+          layoutAllPiles();
+          enableDraggableOnTopCards();
           movingStack.forEach(c => c.classList.remove('dragging'));
+          checkWin();
         }
 
         document.addEventListener('mousemove', onMouseMove);
